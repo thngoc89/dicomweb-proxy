@@ -319,11 +319,6 @@ app.get(
         return;
       }
 
-      // if is a directory, then look for index.html
-      if (fs.statSync(pathname).isDirectory()) {
-        pathname += "/index.html";
-      }
-
       // read file from file system
       fs.readFile(pathname, function(err, data) {
         if (err) {
@@ -332,17 +327,17 @@ app.get(
         } else {
           const term = "\r\n";
           const boundary = crypto.randomBytes(16).toString("hex");
-          const contentId = crypto.randomBytes(16).toString("hex");
+          const contentId = "<" + crypto.randomBytes(16).toString("hex") + "@resteasy-multipart>";
           const endline = `${term}--${boundary}--${term}`;
 
           res.writeHead(200, {
             "Content-Type": `multipart/related;start=${contentId};type="application/octed-stream";boundary="${boundary}"`
           });
 
-          res.write(`${term}--${boundary}${term}`);
-          res.write(`Content-Location:localhost${term}`);
-          res.write(`Content-ID:${contentId}${term}`);
-          res.write(`Content-Type:application/octet-stream${term}`);
+          res.write(`--${boundary}${term}`);
+          res.write(`Content-Location: localhost${term}`);
+          res.write(`Content-ID: ${contentId}${term}`);
+          res.write(`Content-Type: application/octet-stream${term}`);
           res.write(term);
           res.write(data);
           res.write(endline);
