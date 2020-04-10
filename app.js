@@ -7,6 +7,7 @@ const dict = require("dicom-data-dictionary");
 const fs = require("fs");
 const storage = require("node-persist");
 const path = require("path");
+const crypto = require("crypto");
 
 const lock = new Map();
 
@@ -20,11 +21,11 @@ const dailyRotateFile = new winstonLib.transports.DailyRotateFile({
   datePattern: "YYYY-MM-DD-HH",
   zippedArchive: true,
   maxSize: "20m",
-  maxFiles: "14d",
+  maxFiles: "14d"
 });
 
 const winston = new winstonLib.Logger({
-  transports: [dailyRotateFile],
+  transports: [dailyRotateFile]
 });
 
 winston.add(winstonLib.transports.Console);
@@ -42,7 +43,7 @@ function findDicomName(name) {
 }
 
 // prevents nodejs from exiting
-process.on("uncaughtException", (err) => {
+process.on("uncaughtException", err => {
   winston.info("uncaught exception received");
   winston.error(err.stack);
 });
@@ -53,9 +54,9 @@ const doFind = (queryLevel, query, defaults) => {
     tags: [
       {
         key: "00080052",
-        value: queryLevel,
-      },
-    ],
+        value: queryLevel
+      }
+    ]
   };
 
   // set source and target from config
@@ -72,7 +73,7 @@ const doFind = (queryLevel, query, defaults) => {
   tags.push(...defaults);
 
   // add parsed tags
-  tags.forEach((element) => {
+  tags.forEach(element => {
     const tagName = findDicomName(element) || element;
     j.tags.push({ key: tagName, value: "" });
   });
@@ -103,7 +104,7 @@ const doFind = (queryLevel, query, defaults) => {
 
   // run find scu and return json response
   return new Promise((resolve, reject) => {
-    dimse.findScu(JSON.stringify(j), (result) => {
+    dimse.findScu(JSON.stringify(j), result => {
       try {
         const j = JSON.parse(result);
         if (j.code === 0) {
@@ -137,7 +138,7 @@ app.get("/rs/studies", async (req, res) => {
     "0020000D",
     "00200010",
     "00201206",
-    "00201208",
+    "00201208"
   ];
 
   const json = await doFind("STUDY", req.query, tags);
@@ -155,7 +156,7 @@ app.get("/viewer/rs/studies/:studyInstanceUid/series", async (req, res) => {
     "00081190",
     "0020000E",
     "00200011",
-    "00201209",
+    "00201209"
   ];
 
   let query = req.query;
@@ -180,9 +181,9 @@ app.get(
   }
 );
 
-const fileExists = (pathname) => {
+const fileExists = pathname => {
   return new Promise((resolve, reject) => {
-    fs.access(pathname, (err) => {
+    fs.access(pathname, err => {
       if (err) {
         reject(err);
       } else {
@@ -199,17 +200,17 @@ const fetchData = async (studyUid, seriesUid) => {
     tags: [
       {
         key: "00080052",
-        value: "SERIES",
+        value: "SERIES"
       },
       {
         key: "0020000D",
-        value: studyUid,
+        value: studyUid
       },
       {
         key: "0020000E",
-        value: seriesUid,
-      },
-    ],
+        value: seriesUid
+      }
+    ]
   };
 
   // set source and target from config
@@ -221,11 +222,11 @@ const fetchData = async (studyUid, seriesUid) => {
 
   const prom = new Promise((resolve, reject) => {
     try {
-      scu(JSON.stringify(j), (result) => {
+      scu(JSON.stringify(j), result => {
         try {
           const json = JSON.parse(result);
           if (json.code === 0 || json.code === 2) {
-            storage.getItem(studyUid).then((item) => {
+            storage.getItem(studyUid).then(item => {
               if (!item) {
                 winston.info("stored", path.join(j.storagePath, studyUid));
                 const cacheTime = config.get("keepCacheInMinutes");
@@ -269,16 +270,16 @@ const waitOrFetchData = (studyUid, seriesUid) => {
 // remove cached data if outdated
 const clearCache = async (storagePath, currentUid) => {
   const currentDate = new Date();
-  storage.forEach((item) => {
+  storage.forEach(item => {
     const dt = new Date(item.value);
     const directory = path.join(storagePath, item.key);
     if (dt.getTime() < currentDate.getTime() && item.key !== currentUid) {
       fs.rmdir(
         directory,
         {
-          recursive: true,
+          recursive: true
         },
-        (error) => {
+        error => {
           if (error) {
             winston.error(error);
           } else {
@@ -290,6 +291,67 @@ const clearCache = async (storagePath, currentUid) => {
     }
   });
 };
+
+app.get(
+  "/viewer/rs/studies/:studyUid/series/:seriesUid/instances/:instanceUid/frames/:frame",
+  async (req, res) => {
+    let query = req.query;
+    const studyUid = req.params.studyUid;
+    const seriesUid = req.params.seriesUid;
+    const imageUid = req.params.instanceUid;
+    
+    console.log(studyUid, seriesUid, imageUid);
+
+    const storagePath = config.get("storagePath");
+    const pathname = path.join(storagePath, studyUid, imageUid) + ".dcm";
+  
+    try {
+      await fileExists(pathname);
+    } catch (error) {
+      await waitOrFetchData(studyUid, seriesUid);
+    }
+
+    fs.exists(pathname, function(exist) {
+      if (!exist) {
+        // if the file is not found, return 404
+        res.statusCode = 404;
+        res.end(`File ${pathname} not found!`);
+        return;
+      }
+
+      // if is a directory, then look for index.html
+      if (fs.statSync(pathname).isDirectory()) {
+        pathname += "/index.html";
+      }
+
+      // read file from file system
+      fs.readFile(pathname, function(err, data) {
+        if (err) {
+          res.statusCode = 500;
+          res.end(`Error getting the file: ${err}.`);
+        } else {
+          const term = "\r\n";
+          const boundary = crypto.randomBytes(16).toString("hex");
+          const contentId = crypto.randomBytes(16).toString("hex");
+          const endline = `${term}--${boundary}--${term}`;
+
+          res.writeHead(200, {
+            "Content-Type": `multipart/related;start=${contentId};type="application/octed-stream";boundary="${boundary}"`
+          });
+
+          res.write(`${term}--${boundary}${term}`);
+          res.write(`Content-Location:localhost${term}`);
+          res.write(`Content-ID:${contentId}${term}`);
+          res.write(`Content-Type:application/octet-stream${term}`);
+          res.write(term);
+          res.write(data);
+          res.write(endline);
+          res.end();
+        }
+      });
+    });
+  }
+);
 
 app.get("/viewer/wadouri", async (req, res) => {
   const studyUid = req.query.studyUID;
