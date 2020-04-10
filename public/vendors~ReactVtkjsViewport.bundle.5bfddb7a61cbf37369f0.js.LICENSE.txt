@@ -1,0 +1,1447 @@
+/*! exports provided: EPSILON, ARRAY_TYPE, RANDOM, setMatrixArrayType, toRadian, equals */
+
+/*! exports provided: View2D, View3D, ViewportOverlay, ViewportData, getImageData, loadImageData, vtkInteractorStyleMPRWindowLevel, vtkInteractorStyleMPRCrosshairs, vtkInteractorStyleMPRRotate, vtkInteractorStyleMPRSlice, vtkSVGWidgetManager, vtkSVGCrosshairsWidget, invertVolume, EVENTS, default */
+
+/*! exports provided: addBusinessDays, addDays, addHours, addISOWeekYears, addMilliseconds, addMinutes, addMonths, addQuarters, addSeconds, addWeeks, addYears, areIntervalsOverlapping, closestIndexTo, closestTo, compareAsc, compareDesc, differenceInBusinessDays, differenceInCalendarDays, differenceInCalendarISOWeekYears, differenceInCalendarISOWeeks, differenceInCalendarMonths, differenceInCalendarQuarters, differenceInCalendarWeeks, differenceInCalendarYears, differenceInDays, differenceInHours, differenceInISOWeekYears, differenceInMilliseconds, differenceInMinutes, differenceInMonths, differenceInQuarters, differenceInSeconds, differenceInWeeks, differenceInYears, eachDayOfInterval, eachWeekOfInterval, eachWeekendOfInterval, eachWeekendOfMonth, eachWeekendOfYear, endOfDay, endOfDecade, endOfHour, endOfISOWeek, endOfISOWeekYear, endOfMinute, endOfMonth, endOfQuarter, endOfSecond, endOfToday, endOfTomorrow, endOfWeek, endOfYear, endOfYesterday, format, formatDistance, formatDistanceStrict, formatDistanceToNow, formatISO, formatISO9075, formatRFC3339, formatRFC7231, formatRelative, fromUnixTime, getDate, getDay, getDayOfYear, getDaysInMonth, getDaysInYear, getDecade, getHours, getISODay, getISOWeek, getISOWeekYear, getISOWeeksInYear, getMilliseconds, getMinutes, getMonth, getOverlappingDaysInIntervals, getQuarter, getSeconds, getTime, getUnixTime, getWeek, getWeekOfMonth, getWeekYear, getWeeksInMonth, getYear, isAfter, isBefore, isDate, isEqual, isFirstDayOfMonth, isFriday, isFuture, isLastDayOfMonth, isLeapYear, isMonday, isPast, isSameDay, isSameHour, isSameISOWeek, isSameISOWeekYear, isSameMinute, isSameMonth, isSameQuarter, isSameSecond, isSameWeek, isSameYear, isSaturday, isSunday, isThisHour, isThisISOWeek, isThisMinute, isThisMonth, isThisQuarter, isThisSecond, isThisWeek, isThisYear, isThursday, isToday, isTomorrow, isTuesday, isValid, isWednesday, isWeekend, isWithinInterval, isYesterday, lastDayOfDecade, lastDayOfISOWeek, lastDayOfISOWeekYear, lastDayOfMonth, lastDayOfQuarter, lastDayOfWeek, lastDayOfYear, lightFormat, max, min, parse, parseISO, parseJSON, roundToNearestMinutes, set, setDate, setDay, setDayOfYear, setHours, setISODay, setISOWeek, setISOWeekYear, setMilliseconds, setMinutes, setMonth, setQuarter, setSeconds, setWeek, setWeekYear, setYear, startOfDay, startOfDecade, startOfHour, startOfISOWeek, startOfISOWeekYear, startOfMinute, startOfMonth, startOfQuarter, startOfSecond, startOfToday, startOfTomorrow, startOfWeek, startOfWeekYear, startOfYear, startOfYesterday, subBusinessDays, subDays, subHours, subISOWeekYears, subMilliseconds, subMinutes, subMonths, subQuarters, subSeconds, subWeeks, subYears, toDate, maxTime, minTime */
+
+/*! exports provided: create, clone, copy, fromValues, set, identity, transpose, invert, adjoint, determinant, multiply, translate, scale, rotate, rotateX, rotateY, rotateZ, fromTranslation, fromScaling, fromRotation, fromXRotation, fromYRotation, fromZRotation, fromRotationTranslation, fromQuat2, getTranslation, getScaling, getRotation, fromRotationTranslationScale, fromRotationTranslationScaleOrigin, fromQuat, frustum, perspective, perspectiveFromFieldOfView, ortho, lookAt, targetTo, str, frob, add, subtract, multiplyScalar, multiplyScalarAndAdd, exactEquals, equals, mul, sub */
+
+/*! exports provided: create, clone, copy, identity, fromValues, set, invert, determinant, multiply, rotate, scale, translate, fromRotation, fromScaling, fromTranslation, str, frob, add, subtract, multiplyScalar, multiplyScalarAndAdd, exactEquals, equals, mul, sub */
+
+/*! exports provided: create, clone, copy, identity, fromValues, set, transpose, invert, adjoint, determinant, multiply, rotate, scale, fromRotation, fromScaling, str, frob, LDU, add, subtract, exactEquals, equals, multiplyScalar, multiplyScalarAndAdd, mul, sub */
+
+/*! exports provided: create, clone, fromValues, copy, set, add, subtract, multiply, divide, ceil, floor, min, max, round, scale, scaleAndAdd, distance, squaredDistance, length, squaredLength, negate, inverse, normalize, dot, cross, lerp, random, transformMat2, transformMat2d, transformMat3, transformMat4, rotate, angle, zero, str, exactEquals, equals, len, sub, mul, div, dist, sqrDist, sqrLen, forEach */
+
+/*! exports provided: create, clone, fromValues, copy, set, add, subtract, multiply, divide, ceil, floor, min, max, round, scale, scaleAndAdd, distance, squaredDistance, length, squaredLength, negate, inverse, normalize, dot, cross, lerp, random, transformMat4, transformQuat, zero, str, exactEquals, equals, sub, mul, div, dist, sqrDist, len, sqrLen, forEach */
+
+/*! exports provided: create, clone, fromValues, fromRotationTranslationValues, fromRotationTranslation, fromTranslation, fromRotation, fromMat4, copy, identity, set, getReal, getDual, setReal, setDual, getTranslation, translate, rotateX, rotateY, rotateZ, rotateByQuatAppend, rotateByQuatPrepend, rotateAroundAxis, add, multiply, mul, scale, dot, lerp, invert, conjugate, length, len, squaredLength, sqrLen, normalize, str, exactEquals, equals */
+
+/*! exports provided: create, clone, length, fromValues, copy, set, add, subtract, multiply, divide, ceil, floor, min, max, round, scale, scaleAndAdd, distance, squaredDistance, squaredLength, negate, inverse, normalize, dot, cross, lerp, hermite, bezier, random, transformMat4, transformMat3, transformQuat, rotateX, rotateY, rotateZ, angle, zero, str, exactEquals, equals, sub, mul, div, dist, sqrDist, len, sqrLen, forEach */
+
+/*! exports provided: create, fromMat4, clone, copy, fromValues, set, identity, transpose, invert, adjoint, determinant, multiply, translate, rotate, scale, fromTranslation, fromRotation, fromScaling, fromMat2d, fromQuat, normalFromMat4, projection, str, frob, add, subtract, multiplyScalar, multiplyScalarAndAdd, exactEquals, equals, mul, sub */
+
+/*! exports provided: create, identity, setAxisAngle, getAxisAngle, getAngle, multiply, rotateX, rotateY, rotateZ, calculateW, exp, ln, pow, slerp, random, invert, conjugate, fromMat3, fromEuler, str, clone, fromValues, copy, set, add, mul, scale, dot, lerp, length, len, squaredLength, sqrLen, normalize, exactEquals, equals, rotationTo, sqlerp, setAxes */
+
+/*! exports provided: createSub */
+
+/*! exports provided: default */
+
+/*! exports provided: degrees2radians, radians2degrees */
+
+/*! exports provided: extend, newInstance, default */
+
+/*! exports provided: glMatrix, mat2, mat2d, mat3, mat4, quat, quat2, vec2, vec3, vec4 */
+
+/*! exports provided: helpers, uuidv4 */
+
+/*! exports provided: isProtectedDayOfYearToken, isProtectedWeekYearToken, throwProtectedError */
+
+/*! exports provided: maxTime, minTime */
+
+/*! exports provided: toWindowLevel, toLowHighRange */
+
+/*! no static exports found */
+
+/*!**********************!*\
+  !*** ./src/index.js ***!
+  \**********************/
+
+/*!***********************!*\
+  !*** ./src/events.js ***!
+  \***********************/
+
+/*!************************!*\
+  !*** external "react" ***!
+  \************************/
+
+/*!******************************!*\
+  !*** ./src/helpers/index.js ***!
+  \******************************/
+
+/*!******************************!*\
+  !*** ./src/lib/createSub.js ***!
+  \******************************/
+
+/*!*******************************!*\
+  !*** ./src/helpers/uuidv4.js ***!
+  \*******************************/
+
+/*!********************************!*\
+  !*** ./src/lib/math/angles.js ***!
+  \********************************/
+
+/*!*********************************!*\
+  !*** ./src/helpers/formatDA.js ***!
+  \*********************************/
+
+/*!*********************************!*\
+  !*** ./src/helpers/formatPN.js ***!
+  \*********************************/
+
+/*!*********************************!*\
+  !*** ./src/helpers/formatTM.js ***!
+  \*********************************/
+
+/*!*********************************!*\
+  !*** ./src/lib/getImageData.js ***!
+  \*********************************/
+
+/*!*********************************!*\
+  !*** ./src/lib/invertVolume.js ***!
+  \*********************************/
+
+/*!**********************************!*\
+  !*** ./src/lib/loadImageData.js ***!
+  \**********************************/
+
+/*!***********************************!*\
+  !*** ./src/VTKViewport/View2D.js ***!
+  \***********************************/
+
+/*!***********************************!*\
+  !*** ./src/VTKViewport/View3D.js ***!
+  \***********************************/
+
+/*!*************************************!*\
+  !*** ./src/lib/data/insertSlice.js ***!
+  \*************************************/
+
+/*!**************************************!*\
+  !*** ./src/helpers/isValidNumber.js ***!
+  \**************************************/
+
+/*!***************************************!*\
+  !*** ./src/lib/data/buildMetadata.js ***!
+  \***************************************/
+
+/*!***************************************!*\
+  !*** external "vtk.js/Sources/macro" ***!
+  \***************************************/
+
+/*!****************************************!*\
+  !*** ./node_modules/react-is/index.js ***!
+  \****************************************/
+
+/*!****************************************!*\
+  !*** ./src/lib/data/imageDataCache.js ***!
+  \****************************************/
+
+/*!*****************************************!*\
+  !*** ./src/VTKViewport/ViewportData.js ***!
+  \*****************************************/
+
+/*!******************************************!*\
+  !*** ./node_modules/prop-types/index.js ***!
+  \******************************************/
+
+/*!********************************************!*\
+  !*** ./node_modules/date-fns/esm/index.js ***!
+  \********************************************/
+
+/*!********************************************!*\
+  !*** ./node_modules/gl-matrix/esm/mat2.js ***!
+  \********************************************/
+
+/*!********************************************!*\
+  !*** ./node_modules/gl-matrix/esm/mat3.js ***!
+  \********************************************/
+
+/*!********************************************!*\
+  !*** ./node_modules/gl-matrix/esm/mat4.js ***!
+  \********************************************/
+
+/*!********************************************!*\
+  !*** ./node_modules/gl-matrix/esm/quat.js ***!
+  \********************************************/
+
+/*!********************************************!*\
+  !*** ./node_modules/gl-matrix/esm/vec2.js ***!
+  \********************************************/
+
+/*!********************************************!*\
+  !*** ./node_modules/gl-matrix/esm/vec3.js ***!
+  \********************************************/
+
+/*!********************************************!*\
+  !*** ./node_modules/gl-matrix/esm/vec4.js ***!
+  \********************************************/
+
+/*!*********************************************!*\
+  !*** ./node_modules/gl-matrix/esm/index.js ***!
+  \*********************************************/
+
+/*!*********************************************!*\
+  !*** ./node_modules/gl-matrix/esm/mat2d.js ***!
+  \*********************************************/
+
+/*!*********************************************!*\
+  !*** ./node_modules/gl-matrix/esm/quat2.js ***!
+  \*********************************************/
+
+/*!*********************************************!*\
+  !*** ./node_modules/object-assign/index.js ***!
+  \*********************************************/
+
+/*!**********************************************!*\
+  !*** ./node_modules/gl-matrix/esm/common.js ***!
+  \**********************************************/
+
+/*!**********************************************!*\
+  !*** ./src/helpers/formatNumberPrecision.js ***!
+  \**********************************************/
+
+/*!**********************************************!*\
+  !*** ./src/lib/windowLevelRangeConverter.js ***!
+  \**********************************************/
+
+/*!***********************************************!*\
+  !*** ./node_modules/style-loader/lib/urls.js ***!
+  \***********************************************/
+
+/*!************************************************!*\
+  !*** ./node_modules/date-fns/esm/max/index.js ***!
+  \************************************************/
+
+/*!************************************************!*\
+  !*** ./node_modules/date-fns/esm/min/index.js ***!
+  \************************************************/
+
+/*!************************************************!*\
+  !*** ./node_modules/date-fns/esm/set/index.js ***!
+  \************************************************/
+
+/*!************************************************!*\
+  !*** ./src/VTKViewport/createLabelPipeline.js ***!
+  \************************************************/
+
+/*!************************************************!*\
+  !*** ./src/VTKViewport/vtkSVGWidgetManager.js ***!
+  \************************************************/
+
+/*!************************************************!*\
+  !*** ./src/ViewportOverlay/ViewportOverlay.js ***!
+  \************************************************/
+
+/*!*************************************************!*\
+  !*** ./src/ViewportOverlay/ViewportOverlay.css ***!
+  \*************************************************/
+
+/*!*************************************************!*\
+  !*** ./src/lib/math/realsApproximatelyEqual.js ***!
+  \*************************************************/
+
+/*!**************************************************!*\
+  !*** ./node_modules/date-fns/esm/parse/index.js ***!
+  \**************************************************/
+
+/*!**************************************************!*\
+  !*** external "vtk.js/Sources/Common/Core/Math" ***!
+  \**************************************************/
+
+/*!***************************************************!*\
+  !*** ./node_modules/date-fns/esm/format/index.js ***!
+  \***************************************************/
+
+/*!***************************************************!*\
+  !*** ./node_modules/date-fns/esm/getDay/index.js ***!
+  \***************************************************/
+
+/*!***************************************************!*\
+  !*** ./node_modules/date-fns/esm/isDate/index.js ***!
+  \***************************************************/
+
+/*!***************************************************!*\
+  !*** ./node_modules/date-fns/esm/isPast/index.js ***!
+  \***************************************************/
+
+/*!***************************************************!*\
+  !*** ./node_modules/date-fns/esm/setDay/index.js ***!
+  \***************************************************/
+
+/*!***************************************************!*\
+  !*** ./node_modules/date-fns/esm/toDate/index.js ***!
+  \***************************************************/
+
+/*!***************************************************!*\
+  !*** ./node_modules/prop-types/checkPropTypes.js ***!
+  \***************************************************/
+
+/*!***************************************************!*\
+  !*** ./src/VTKViewport/vtkSVGCrosshairsWidget.js ***!
+  \***************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/addDays/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/getDate/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/getTime/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/getWeek/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/getYear/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/isAfter/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/isEqual/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/isToday/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/isValid/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/setDate/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/setWeek/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/setYear/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/date-fns/esm/subDays/index.js ***!
+  \****************************************************/
+
+/*!****************************************************!*\
+  !*** ./node_modules/style-loader/lib/addStyles.js ***!
+  \****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/css-loader/dist/runtime/api.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/addHours/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/addWeeks/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/addYears/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfDay/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/getHours/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/getMonth/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/isBefore/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/isFriday/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/isFuture/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/isMonday/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/isSunday/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/parseISO/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/setHours/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/setMonth/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/subHours/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/subWeeks/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./node_modules/date-fns/esm/subYears/index.js ***!
+  \*****************************************************/
+
+/*!*****************************************************!*\
+  !*** ./src/lib/data/sortDatasetsByImagePosition.js ***!
+  \*****************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/addMonths/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/closestTo/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/constants/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfHour/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfWeek/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfYear/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/formatISO/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/getDecade/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/getISODay/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isSameDay/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isTuesday/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isWeekend/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/parseJSON/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/setISODay/index.js ***!
+  \******************************************************/
+
+/*!******************************************************!*\
+  !*** ./node_modules/date-fns/esm/subMonths/index.js ***!
+  \******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/typeof.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/addMinutes/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/addSeconds/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/compareAsc/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfMonth/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfToday/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/getISOWeek/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/getMinutes/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/getQuarter/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/getSeconds/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isLeapYear/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isSameHour/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isSameWeek/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isSameYear/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isSaturday/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isThisHour/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isThisWeek/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isThisYear/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isThursday/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/isTomorrow/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/setISOWeek/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/setMinutes/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/setQuarter/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/setSeconds/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfDay/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/subMinutes/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./node_modules/date-fns/esm/subSeconds/index.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** ./src/VTKViewport/vtkInteractorStyleMPRSlice.js ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** external "vtk.js/Sources/Common/Core/DataArray" ***!
+  \*******************************************************/
+
+/*!*******************************************************!*\
+  !*** external "vtk.js/Sources/Rendering/Core/Volume" ***!
+  \*******************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/extends.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/assign/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/addQuarters/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/compareDesc/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfDecade/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfMinute/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfSecond/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/getUnixTime/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/getWeekYear/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/isSameMonth/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/isThisMonth/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/isWednesday/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/isYesterday/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/lightFormat/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/setWeekYear/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfHour/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfWeek/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfYear/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./node_modules/date-fns/esm/subQuarters/index.js ***!
+  \********************************************************/
+
+/*!********************************************************!*\
+  !*** ./src/VTKViewport/vtkInteractorStyleMPRRotate.js ***!
+  \********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/inherits.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfISOWeek/index.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfQuarter/index.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/date-fns/esm/fromUnixTime/index.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/date-fns/esm/getDayOfYear/index.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/date-fns/esm/isSameMinute/index.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/date-fns/esm/isSameSecond/index.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/date-fns/esm/isThisMinute/index.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/date-fns/esm/isThisSecond/index.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/date-fns/esm/locale/en-US/index.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/date-fns/esm/setDayOfYear/index.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfMonth/index.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfToday/index.js ***!
+  \*********************************************************/
+
+/*!*********************************************************!*\
+  !*** external "vtk.js/Sources/Rendering/Core/Renderer" ***!
+  \*********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfTomorrow/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/formatISO9075/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/formatRFC3339/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/formatRFC7231/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/getDaysInYear/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/isSameISOWeek/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/isSameQuarter/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/isThisISOWeek/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/isThisQuarter/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/lastDayOfWeek/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/lastDayOfYear/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfDecade/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfMinute/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfSecond/index.js ***!
+  \**********************************************************/
+
+/*!**********************************************************!*\
+  !*** ./src/lib/data/getPatientWeightAndCorrectedDose.js ***!
+  \**********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/setUTCDay/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/toInteger/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/closestIndexTo/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfYesterday/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/formatDistance/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/formatRelative/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/getDaysInMonth/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/getISOWeekYear/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/getWeekOfMonth/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/lastDayOfMonth/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/setISOWeekYear/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfISOWeek/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfQuarter/index.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** ./node_modules/react-is/cjs/react-is.development.js ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** external "vtk.js/Sources/Common/Core/MatrixBuilder" ***!
+  \***********************************************************/
+
+/*!***********************************************************!*\
+  !*** external "vtk.js/Sources/Rendering/Core/Coordinate" ***!
+  \***********************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/createClass.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/getUTCWeek/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/setUTCWeek/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/addBusinessDays/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/addISOWeekYears/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/addMilliseconds/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/getMilliseconds/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/getWeeksInMonth/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/lastDayOfDecade/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/setMilliseconds/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfTomorrow/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfWeekYear/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/subBusinessDays/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/subISOWeekYears/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/date-fns/esm/subMilliseconds/index.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./node_modules/prop-types/factoryWithTypeCheckers.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** ./src/VTKViewport/vtkInteractorStyleMPRCrosshairs.js ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** external "vtk.js/Sources/Common/DataModel/ImageData" ***!
+  \************************************************************/
+
+/*!************************************************************!*\
+  !*** external "vtk.js/Sources/Widgets/Core/WidgetManager" ***!
+  \************************************************************/
+
+/*!*************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/cloneObject/index.js ***!
+  \*************************************************************/
+
+/*!*************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInDays/index.js ***!
+  \*************************************************************/
+
+/*!*************************************************************!*\
+  !*** ./node_modules/date-fns/esm/endOfISOWeekYear/index.js ***!
+  \*************************************************************/
+
+/*!*************************************************************!*\
+  !*** ./node_modules/date-fns/esm/isLastDayOfMonth/index.js ***!
+  \*************************************************************/
+
+/*!*************************************************************!*\
+  !*** ./node_modules/date-fns/esm/isWithinInterval/index.js ***!
+  \*************************************************************/
+
+/*!*************************************************************!*\
+  !*** ./node_modules/date-fns/esm/lastDayOfISOWeek/index.js ***!
+  \*************************************************************/
+
+/*!*************************************************************!*\
+  !*** ./node_modules/date-fns/esm/lastDayOfQuarter/index.js ***!
+  \*************************************************************/
+
+/*!*************************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfYesterday/index.js ***!
+  \*************************************************************/
+
+/*!*************************************************************!*\
+  !*** ./node_modules/prop-types/lib/ReactPropTypesSecret.js ***!
+  \*************************************************************/
+
+/*!*************************************************************!*\
+  !*** ./src/VTKViewport/vtkInteractorStyleMPRWindowLevel.js ***!
+  \*************************************************************/
+
+/*!*************************************************************!*\
+  !*** external "vtk.js/Sources/Filters/General/PaintFilter" ***!
+  \*************************************************************/
+
+/*!*************************************************************!*\
+  !*** external "vtk.js/Sources/Rendering/Core/VolumeMapper" ***!
+  \*************************************************************/
+
+/*!**************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/slicedToArray.js ***!
+  \**************************************************************/
+
+/*!**************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/setUTCISODay/index.js ***!
+  \**************************************************************/
+
+/*!**************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInHours/index.js ***!
+  \**************************************************************/
+
+/*!**************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInWeeks/index.js ***!
+  \**************************************************************/
+
+/*!**************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInYears/index.js ***!
+  \**************************************************************/
+
+/*!**************************************************************!*\
+  !*** ./node_modules/date-fns/esm/eachDayOfInterval/index.js ***!
+  \**************************************************************/
+
+/*!**************************************************************!*\
+  !*** ./node_modules/date-fns/esm/eachWeekendOfYear/index.js ***!
+  \**************************************************************/
+
+/*!**************************************************************!*\
+  !*** ./node_modules/date-fns/esm/getISOWeeksInYear/index.js ***!
+  \**************************************************************/
+
+/*!**************************************************************!*\
+  !*** ./node_modules/date-fns/esm/isFirstDayOfMonth/index.js ***!
+  \**************************************************************/
+
+/*!**************************************************************!*\
+  !*** ./node_modules/date-fns/esm/isSameISOWeekYear/index.js ***!
+  \**************************************************************/
+
+/*!***************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/arrayWithHoles.js ***!
+  \***************************************************************/
+
+/*!***************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/classCallCheck.js ***!
+  \***************************************************************/
+
+/*!***************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/defineProperty.js ***!
+  \***************************************************************/
+
+/*!***************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/getPrototypeOf.js ***!
+  \***************************************************************/
+
+/*!***************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/setPrototypeOf.js ***!
+  \***************************************************************/
+
+/*!***************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/getUTCISOWeek/index.js ***!
+  \***************************************************************/
+
+/*!***************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/setUTCISOWeek/index.js ***!
+  \***************************************************************/
+
+/*!***************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInMonths/index.js ***!
+  \***************************************************************/
+
+/*!***************************************************************!*\
+  !*** ./node_modules/date-fns/esm/eachWeekOfInterval/index.js ***!
+  \***************************************************************/
+
+/*!***************************************************************!*\
+  !*** ./node_modules/date-fns/esm/eachWeekendOfMonth/index.js ***!
+  \***************************************************************/
+
+/*!***************************************************************!*\
+  !*** ./node_modules/date-fns/esm/parse/_lib/parsers/index.js ***!
+  \***************************************************************/
+
+/*!***************************************************************!*\
+  !*** ./node_modules/date-fns/esm/startOfISOWeekYear/index.js ***!
+  \***************************************************************/
+
+/*!***************************************************************!*\
+  !*** external "vtk.js/Sources/Widgets/Widgets3D/PaintWidget" ***!
+  \***************************************************************/
+
+/*!****************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/iterableToArray.js ***!
+  \****************************************************************/
+
+/*!****************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/nonIterableRest.js ***!
+  \****************************************************************/
+
+/*!****************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/getUTCWeekYear/index.js ***!
+  \****************************************************************/
+
+/*!****************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/startOfUTCWeek/index.js ***!
+  \****************************************************************/
+
+/*!****************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInMinutes/index.js ***!
+  \****************************************************************/
+
+/*!****************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInSeconds/index.js ***!
+  \****************************************************************/
+
+/*!****************************************************************!*\
+  !*** ./node_modules/date-fns/esm/formatDistanceToNow/index.js ***!
+  \****************************************************************/
+
+/*!*****************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/addLeadingZeros/index.js ***!
+  \*****************************************************************/
+
+/*!*****************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/getUTCDayOfYear/index.js ***!
+  \*****************************************************************/
+
+/*!*****************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/protectedTokens/index.js ***!
+  \*****************************************************************/
+
+/*!*****************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInQuarters/index.js ***!
+  \*****************************************************************/
+
+/*!*****************************************************************!*\
+  !*** ./node_modules/date-fns/esm/formatDistanceStrict/index.js ***!
+  \*****************************************************************/
+
+/*!*****************************************************************!*\
+  !*** ./node_modules/date-fns/esm/lastDayOfISOWeekYear/index.js ***!
+  \*****************************************************************/
+
+/*!******************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/arrayWithoutHoles.js ***!
+  \******************************************************************/
+
+/*!******************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/nonIterableSpread.js ***!
+  \******************************************************************/
+
+/*!******************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/toConsumableArray.js ***!
+  \******************************************************************/
+
+/*!******************************************************************!*\
+  !*** ./node_modules/date-fns/esm/eachWeekendOfInterval/index.js ***!
+  \******************************************************************/
+
+/*!******************************************************************!*\
+  !*** ./node_modules/date-fns/esm/roundToNearestMinutes/index.js ***!
+  \******************************************************************/
+
+/*!*******************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/format/formatters/index.js ***!
+  \*******************************************************************/
+
+/*!*******************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/getUTCISOWeekYear/index.js ***!
+  \*******************************************************************/
+
+/*!*******************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/startOfUTCISOWeek/index.js ***!
+  \*******************************************************************/
+
+/*!********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/startOfUTCWeekYear/index.js ***!
+  \********************************************************************/
+
+/*!********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/areIntervalsOverlapping/index.js ***!
+  \********************************************************************/
+
+/*!********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/locale/en-US/_lib/match/index.js ***!
+  \********************************************************************/
+
+/*!********************************************************************!*\
+  !*** external "vtk.js/Sources/Common/DataModel/PiecewiseFunction" ***!
+  \********************************************************************/
+
+/*!********************************************************************!*\
+  !*** external "vtk.js/Sources/Rendering/Misc/GenericRenderWindow" ***!
+  \********************************************************************/
+
+/*!*********************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/iterableToArrayLimit.js ***!
+  \*********************************************************************/
+
+/*!*********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInBusinessDays/index.js ***!
+  \*********************************************************************/
+
+/*!*********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInCalendarDays/index.js ***!
+  \*********************************************************************/
+
+/*!*********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInISOWeekYears/index.js ***!
+  \*********************************************************************/
+
+/*!*********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInMilliseconds/index.js ***!
+  \*********************************************************************/
+
+/*!*********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/locale/_lib/buildMatchFn/index.js ***!
+  \*********************************************************************/
+
+/*!**********************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/assertThisInitialized.js ***!
+  \**********************************************************************/
+
+/*!**********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInCalendarWeeks/index.js ***!
+  \**********************************************************************/
+
+/*!**********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInCalendarYears/index.js ***!
+  \**********************************************************************/
+
+/*!**********************************************************************!*\
+  !*** external "vtk.js/Sources/Rendering/Core/ColorTransferFunction" ***!
+  \**********************************************************************/
+
+/*!**********************************************************************!*\
+  !*** external "vtk.js/Sources/Widgets/Core/WidgetManager/Constants" ***!
+  \**********************************************************************/
+
+/*!***********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/format/longFormatters/index.js ***!
+  \***********************************************************************/
+
+/*!***********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/startOfUTCISOWeekYear/index.js ***!
+  \***********************************************************************/
+
+/*!***********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInCalendarMonths/index.js ***!
+  \***********************************************************************/
+
+/*!***********************************************************************!*\
+  !*** ./node_modules/date-fns/esm/locale/en-US/_lib/localize/index.js ***!
+  \***********************************************************************/
+
+/*!************************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/format/lightFormatters/index.js ***!
+  \************************************************************************/
+
+/*!************************************************************************!*\
+  !*** ./node_modules/date-fns/esm/locale/_lib/buildLocalizeFn/index.js ***!
+  \************************************************************************/
+
+/*!*************************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInCalendarISOWeeks/index.js ***!
+  \*************************************************************************/
+
+/*!*************************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInCalendarQuarters/index.js ***!
+  \*************************************************************************/
+
+/*!*************************************************************************!*\
+  !*** ./node_modules/date-fns/esm/locale/en-US/_lib/formatLong/index.js ***!
+  \*************************************************************************/
+
+/*!**************************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/possibleConstructorReturn.js ***!
+  \**************************************************************************/
+
+/*!**************************************************************************!*\
+  !*** ./node_modules/date-fns/esm/getOverlappingDaysInIntervals/index.js ***!
+  \**************************************************************************/
+
+/*!**************************************************************************!*\
+  !*** ./node_modules/date-fns/esm/locale/_lib/buildFormatLongFn/index.js ***!
+  \**************************************************************************/
+
+/*!**************************************************************************!*\
+  !*** external "vtk.js/Sources/Rendering/Core/InteractorStyle/Constants" ***!
+  \**************************************************************************/
+
+/*!****************************************************************************!*\
+  !*** ./node_modules/date-fns/esm/locale/_lib/buildMatchPatternFn/index.js ***!
+  \****************************************************************************/
+
+/*!*****************************************************************************!*\
+  !*** ./node_modules/date-fns/esm/differenceInCalendarISOWeekYears/index.js ***!
+  \*****************************************************************************/
+
+/*!*****************************************************************************!*\
+  !*** ./node_modules/date-fns/esm/locale/en-US/_lib/formatDistance/index.js ***!
+  \*****************************************************************************/
+
+/*!*****************************************************************************!*\
+  !*** ./node_modules/date-fns/esm/locale/en-US/_lib/formatRelative/index.js ***!
+  \*****************************************************************************/
+
+/*!******************************************************************************!*\
+  !*** external "vtk.js/Sources/Interaction/Style/InteractorStyleManipulator" ***!
+  \******************************************************************************/
+
+/*!********************************************************************************!*\
+  !*** external "vtk.js/Sources/Interaction/Manipulators/MouseRangeManipulator" ***!
+  \********************************************************************************/
+
+/*!*********************************************************************************!*\
+  !*** ./node_modules/date-fns/esm/_lib/getTimezoneOffsetInMilliseconds/index.js ***!
+  \*********************************************************************************/
+
+/*!*********************************************************************************************!*\
+  !*** external "vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballPanManipulator" ***!
+  \*********************************************************************************************/
+
+/*!**********************************************************************************************!*\
+  !*** external "vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballZoomManipulator" ***!
+  \**********************************************************************************************/
+
+/*!************************************************************************************************!*\
+  !*** external "vtk.js/Sources/Interaction/Manipulators/MouseCameraTrackballRotateManipulator" ***!
+  \************************************************************************************************/
+
+/*!*****************************************************************************************************************************!*\
+  !*** external {"commonjs":"cornerstone-core","commonjs2":"cornerstone-core","amd":"cornerstone-core","root":"cornerstone"} ***!
+  \*****************************************************************************************************************************/
+
+/*!***********************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader/dist/cjs.js!./node_modules/postcss-loader/src??ref--5-2!./src/ViewportOverlay/ViewportOverlay.css ***!
+  \***********************************************************************************************************************************/
+
+/**
+ * @license
+ * cardboard-vr-display
+ * Copyright (c) 2015-2017 Google
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @license
+ * gl-preserve-state
+ * Copyright (c) 2016, Brandon Jones.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+/**
+ * @license
+ * nosleep.js
+ * Copyright (c) 2017, Rich Tibbett
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+/**
+ * @license
+ * webvr-polyfill
+ * Copyright (c) 2015-2017 Google
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @license
+ * webvr-polyfill-dpdb
+ * Copyright (c) 2015-2017 Google
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @license
+ * webvr-polyfill-dpdb 
+ * Copyright (c) 2017 Google
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @license
+ * wglu-preserve-state
+ * Copyright (c) 2016, Brandon Jones.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
