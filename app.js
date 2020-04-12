@@ -8,7 +8,10 @@ const fs = require("fs");
 const storage = require("node-persist");
 const path = require("path");
 const crypto = require("crypto");
-
+const dicomParser = require("dicom-parser");
+const toBuffer = require("typedarray-to-buffer");
+const dcmjs = require("dcmjs");
+const cors = require("cors");
 const lock = new Map();
 
 require("winston-daily-rotate-file");
@@ -32,6 +35,7 @@ winston.add(winstonLib.transports.Console);
 
 const app = express();
 app.use(express.static("public"));
+app.use(cors());
 
 function findDicomName(name) {
   for (const key of Object.keys(dict.standardDataElements)) {
@@ -145,7 +149,7 @@ app.get("/rs/studies", async (req, res) => {
   res.json(json);
 });
 
-app.get("/viewer/rs/studies/:studyInstanceUid/series", async (req, res) => {
+app.get("/rs/studies/:studyInstanceUid/series", async (req, res) => {
   // fix for OHIF viewer assuming a lot of tags
   const tags = [
     "00080005",
@@ -167,7 +171,7 @@ app.get("/viewer/rs/studies/:studyInstanceUid/series", async (req, res) => {
 });
 
 app.get(
-  "/viewer/rs/studies/:studyInstanceUid/series/:seriesInstanceUid/metadata",
+  "/rs/studies/:studyInstanceUid/series/:seriesInstanceUid/metadata",
   async (req, res) => {
     // fix for OHIF viewer assuming a lot of tags
     const tags = ["00080016", "00080018"];
@@ -177,6 +181,12 @@ app.get(
     query["SeriesInstanceUID"] = req.params.seriesInstanceUid;
 
     const json = await doFind("IMAGE", query, tags);
+
+    const naturalizedDataset = dcmjs.data.DicomMetaDictionary.naturalizeDataset(
+      json
+    );
+    console.log(json);
+    console.log(naturalizedDataset);
     res.json(json);
   }
 );
@@ -269,6 +279,7 @@ const waitOrFetchData = (studyUid, seriesUid) => {
 
 // remove cached data if outdated
 const clearCache = async (storagePath, currentUid) => {
+  return;
   const currentDate = new Date();
   storage.forEach(item => {
     const dt = new Date(item.value);
@@ -293,18 +304,16 @@ const clearCache = async (storagePath, currentUid) => {
 };
 
 app.get(
-  "/viewer/rs/studies/:studyUid/series/:seriesUid/instances/:instanceUid/frames/:frame",
+  "/rs/studies/:studyUid/series/:seriesUid/instances/:instanceUid/frames/:frame",
   async (req, res) => {
     let query = req.query;
     const studyUid = req.params.studyUid;
     const seriesUid = req.params.seriesUid;
     const imageUid = req.params.instanceUid;
-    
-    console.log(studyUid, seriesUid, imageUid);
 
     const storagePath = config.get("storagePath");
     const pathname = path.join(storagePath, studyUid, imageUid) + ".dcm";
-  
+
     try {
       await fileExists(pathname);
     } catch (error) {
@@ -325,9 +334,20 @@ app.get(
           res.statusCode = 500;
           res.end(`Error getting the file: ${err}.`);
         } else {
+          const dataSet = dicomParser.parseDicom(data);
+          const pixelData = dataSet.elements.x7fe00010;
+          const pixelDataBuffer = dicomParser.sharedCopy(
+            data,
+            pixelData.dataOffset,
+            pixelData.length
+          );
+          const pixelDataString = toBuffer(pixelDataBuffer);
           const term = "\r\n";
           const boundary = crypto.randomBytes(16).toString("hex");
-          const contentId = "<" + crypto.randomBytes(16).toString("hex") + "@resteasy-multipart>";
+          const contentId =
+            "<" +
+            crypto.randomBytes(16).toString("hex") +
+            "@resteasy-multipart>";
           const endline = `${term}--${boundary}--${term}`;
 
           res.writeHead(200, {
@@ -339,7 +359,7 @@ app.get(
           res.write(`Content-ID: ${contentId}${term}`);
           res.write(`Content-Type: application/octet-stream${term}`);
           res.write(term);
-          res.write(data);
+          res.write(pixelDataString);
           res.write(endline);
           res.end();
         }
@@ -347,8 +367,12 @@ app.get(
     });
   }
 );
-
-app.get("/viewer/wadouri", async (req, res) => {
+function getFilesizeInBytes(filename) {
+  var stats = fs.statSync(filename)
+  var fileSizeInBytes = stats["size"]
+  return fileSizeInBytes;
+}
+app.get("/wadouri", async (req, res) => {
   const studyUid = req.query.studyUID;
   const seriesUid = req.query.seriesUID;
   const imageUid = req.query.objectUID;
@@ -367,8 +391,18 @@ app.get("/viewer/wadouri", async (req, res) => {
       res.statusCode = 500;
       return res.end(`Error getting the file: ${err}.`);
     }
+/*
+    const DicomDict = dcmjs.data.DicomMessage.readFile(data.buffer);
+
+    const dataset = dcmjs.data.DicomMetaDictionary.naturalizeDataset(
+      DicomDict.dict
+    );
+
+    console.log(dataset);
+*/
     // if the file is found, set Content-type and send data
     res.setHeader("Content-type", "application/dicom");
+    res.setHeader("Content-Length", getFilesizeInBytes(pathname));
     res.end(data);
   });
 
