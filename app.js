@@ -6,12 +6,14 @@ const path = require("path");
 const Keycloak = require("keycloak-connect");
 const session = require("express-session");
 const { v4: uuidv4 } = require("uuid");
+const dicomParser = require("dicom-parser");
 const utils = require("./utils.js");
+
 const app = express();
 const logger = utils.getLogger();
 
 // unprotected middleware passing
-let middle = function(req, res, next) {
+let middle = function (req, res, next) {
   next();
 };
 
@@ -117,16 +119,47 @@ app.get(
   "/viewer/viewer/rs/studies/:studyInstanceUid/series/:seriesInstanceUid/metadata",
   middle,
   async (req, res) => {
+    const { studyUid, seriesUid } = req.params;
+
     // fix for OHIF viewer assuming a lot of tags
     const tags = ["00080016", "00080018"];
 
     let query = req.query;
-    query["StudyInstanceUID"] = req.params.studyInstanceUid;
-    query["SeriesInstanceUID"] = req.params.seriesInstanceUid;
+    query["StudyInstanceUID"] = studyUid;
+    query["SeriesInstanceUID"] = seriesUid;
 
     const json = await utils.doFind("IMAGE", query, tags);
-    res.json(json);
-  }
+
+    await utils.waitOrFetchData(studyUid, seriesUid);
+
+    const sopInstanceUid = json[0]["00080018"].Value;
+    const storagePath = config.get("storagePath");
+    const pathname = path.join(storagePath, studyUid, imageUid) + ".dcm";
+  
+    fs.readFile(pathname, (err, data) => {
+      if (err) {
+        res.statusCode = 500;
+        res.json(json);
+      } else {
+        const dataset = dicomParser.parseDicom(data);
+        const bitsAllocated = dataset.elements.x00280100;
+        const bitsStored = dataset.elements.x00280101;
+        const highBit = dataset.elements.x00280102;
+        const rows = dataset.elements.x00280010;
+        const cols = dataset.elements.x00280011;
+        const pixelSpacing = dataset.elements.x00280030;
+        for (let i = 0; i < json.length; i++) {
+          json[i]["00280100"] = { Value: [bitsAllocated], vr: "US" };
+          json[i]["00280101"] = { Value: [bitsStored], vr: "US"};
+          json[i]["00280102"] = { Value: [highBit], vr: "US"};
+          json[i]["00280010"] = { Value: [rows], vr: "US"};
+          json[i]["00280011"] = { Value: [cols], vr: "US"};
+          json[i]["00280030"] = { Value: [pixelSpacing], vr: "DS"};
+        }
+        console.log(json);
+        res.json(json);
+      }
+    }
 );
 
 //------------------------------------------------------------------
