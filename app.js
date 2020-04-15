@@ -3,9 +3,9 @@ const config = require("config");
 const shell = require("shelljs");
 const fs = require("fs");
 const path = require("path");
-const Keycloak = require("keycloak-connect");
-const session = require("express-session");
-const { v4: uuidv4 } = require("uuid");
+// const Keycloak = require("keycloak-connect");
+// const session = require("express-session");
+// const { v4: uuidv4 } = require("uuid");
 const dicomParser = require("dicom-parser");
 const utils = require("./utils.js");
 
@@ -13,10 +13,10 @@ const app = express();
 const logger = utils.getLogger();
 
 // unprotected middleware passing
-let middle = function (req, res, next) {
+let middle = (req, res, next) => {
   next();
 };
-
+/*
 // init auth if enabled
 if (config.get("useKeycloakAuth")) {
   const memoryStore = new session.MemoryStore();
@@ -37,6 +37,7 @@ if (config.get("useKeycloakAuth")) {
   // use keycloak as middleware
   middle = keycloak.protect();
 }
+*/
 
 shell.mkdir("-p", config.get("logDir"));
 shell.mkdir("-p", "./data");
@@ -51,16 +52,7 @@ process.on("uncaughtException", err => {
 
 //------------------------------------------------------------------
 
-app.get("/", middle, async (req, res) => {
-  res.writeHead(301, {
-    Location: "http://" + req.headers["host"] + "/viewer/",
-  });
-  return res.end();
-});
-
-//------------------------------------------------------------------
-
-app.get("/viewer/rs/studies", middle, async (req, res) => {
+app.get("/rs/studies", middle, async (req, res) => {
   // fix for OHIF viewer assuming a lot of tags
   const tags = [
     "00080005",
@@ -89,7 +81,7 @@ app.get("/viewer/rs/studies", middle, async (req, res) => {
 //------------------------------------------------------------------
 
 app.get(
-  "/viewer/viewer/rs/studies/:studyInstanceUid/series",
+  "/viewer/rs/studies/:studyInstanceUid/series",
   middle,
   async (req, res) => {
     // fix for OHIF viewer assuming a lot of tags
@@ -116,55 +108,57 @@ app.get(
 //------------------------------------------------------------------
 
 app.get(
-  "/viewer/viewer/rs/studies/:studyInstanceUid/series/:seriesInstanceUid/metadata",
+  "/viewer/rs/studies/:studyInstanceUid/series/:seriesInstanceUid/metadata",
   middle,
   async (req, res) => {
-    const { studyUid, seriesUid } = req.params;
+    const { studyInstanceUid, seriesInstanceUid } = req.params;
 
     // fix for OHIF viewer assuming a lot of tags
     const tags = ["00080016", "00080018"];
 
     let query = req.query;
-    query["StudyInstanceUID"] = studyUid;
-    query["SeriesInstanceUID"] = seriesUid;
+    query["StudyInstanceUID"] = studyInstanceUid;
+    query["SeriesInstanceUID"] = seriesInstanceUid;
 
-    const json = await utils.doFind("IMAGE", query, tags);
-
-    await utils.waitOrFetchData(studyUid, seriesUid);
-
-    const sopInstanceUid = json[0]["00080018"].Value;
+    let json = await utils.doFind("IMAGE", query, tags);
+    const sopInstanceUid = json[0]["00080018"]["Value"][0];
     const storagePath = config.get("storagePath");
-    const pathname = path.join(storagePath, studyUid, imageUid) + ".dcm";
-  
+    const pathname = path.join(storagePath, studyInstanceUid, sopInstanceUid) + ".dcm";
+
+    await utils.waitOrFetchData(studyInstanceUid, seriesInstanceUid);
+
     fs.readFile(pathname, (err, data) => {
       if (err) {
         res.statusCode = 500;
         res.json(json);
-      } else {
-        const dataset = dicomParser.parseDicom(data);
-        const bitsAllocated = dataset.elements.x00280100;
-        const bitsStored = dataset.elements.x00280101;
-        const highBit = dataset.elements.x00280102;
-        const rows = dataset.elements.x00280010;
-        const cols = dataset.elements.x00280011;
-        const pixelSpacing = dataset.elements.x00280030;
-        for (let i = 0; i < json.length; i++) {
-          json[i]["00280100"] = { Value: [bitsAllocated], vr: "US" };
-          json[i]["00280101"] = { Value: [bitsStored], vr: "US"};
-          json[i]["00280102"] = { Value: [highBit], vr: "US"};
-          json[i]["00280010"] = { Value: [rows], vr: "US"};
-          json[i]["00280011"] = { Value: [cols], vr: "US"};
-          json[i]["00280030"] = { Value: [pixelSpacing], vr: "DS"};
-        }
-        console.log(json);
-        res.json(json);
+        return;
       }
-    }
+      const dataset = dicomParser.parseDicom(data);
+      // console.log(dataset);
+      const bitsAllocated = dataset.byteArrayParser.readUint16("x00280100");
+      const bitsStored = dataset.byteArrayParser.readUint16("x00280101");
+      const highBit = dataset.byteArrayParser.readUint16("x00280102");
+      const rows = dataset.byteArrayParser.readUint16("x00280010");
+      const cols = dataset.byteArrayParser.readUint16("x00280011");
+      const pixelSpacing = dataset.string("x00280030");
+      console.log(bitsAllocated, bitsStored, highBit, rows, cols, pixelSpacing);
+      for (let i = 0; i < json.length; i++) {
+        json[i]["00280100"] = { Value: [bitsAllocated], vr: "US" };
+        json[i]["00280101"] = { Value: [bitsStored], vr: "US" };
+        json[i]["00280102"] = { Value: [highBit], vr: "US" };
+        json[i]["00280010"] = { Value: [rows], vr: "US" };
+        json[i]["00280011"] = { Value: [cols], vr: "US" };
+        json[i]["00280030"] = { Value: [pixelSpacing], vr: "DS" };
+      }
+      console.log(json);
+      res.json(json);
+    });
+  }
 );
 
 //------------------------------------------------------------------
 
-app.get("/viewer/viewer/wadouri", middle, async (req, res) => {
+app.get("/viewer/wadouri", middle, async (req, res) => {
   const studyUid = req.query.studyUID;
   const seriesUid = req.query.seriesUID;
   const imageUid = req.query.objectUID;
