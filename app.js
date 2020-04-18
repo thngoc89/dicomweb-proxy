@@ -71,7 +71,7 @@ app.get("/rs/studies", middle, async (req, res) => {
     "0020000D",
     "00200010",
     "00201206",
-    "00201208"
+    "00201208",
   ];
 
   const json = await utils.doFind("STUDY", req.query, tags);
@@ -94,7 +94,7 @@ app.get(
       "00081190",
       "0020000E",
       "00200011",
-      "00201209"
+      "00201209",
     ];
 
     let query = req.query;
@@ -121,11 +121,24 @@ app.get(
     query["SeriesInstanceUID"] = seriesInstanceUid;
 
     let json = await utils.doFind("IMAGE", query, tags);
-    const sopInstanceUid = json[0]["00080018"]["Value"][0];
+    // fetch series but wait for first image only
+    let sopInstanceUid = await utils.waitOrFetchData(
+      studyInstanceUid,
+      seriesInstanceUid,
+      true
+    );
+    if (json.length === 0) {
+      logger.error("no metadata found");
+      res.statusCode = 500;
+      res.json(json);
+      return;
+    }
+    if (!sopInstanceUid) {
+      sopInstanceUid = json[0]["00080018"]["Value"][0];
+    }
     const storagePath = config.get("storagePath");
-    const pathname = path.join(storagePath, studyInstanceUid, sopInstanceUid) + ".dcm";
-
-    await utils.waitOrFetchData(studyInstanceUid, seriesInstanceUid);
+    const pathname =
+      path.join(storagePath, studyInstanceUid, sopInstanceUid) + ".dcm";
 
     fs.readFile(pathname, (err, data) => {
       if (err) {
@@ -134,14 +147,16 @@ app.get(
         return;
       }
       const dataset = dicomParser.parseDicom(data);
-      // console.log(dataset);
-      const bitsAllocated = dataset.byteArrayParser.readUint16("x00280100");
-      const bitsStored = dataset.byteArrayParser.readUint16("x00280101");
-      const highBit = dataset.byteArrayParser.readUint16("x00280102");
-      const rows = dataset.byteArrayParser.readUint16("x00280010");
-      const cols = dataset.byteArrayParser.readUint16("x00280011");
+
+      // parse additional needed attributes
+      const bitsAllocated = dataset.uint16("x00280100");
+      const bitsStored = dataset.uint16("x00280101");
+      const highBit = dataset.uint16("x00280102");
+      const rows = dataset.uint16("x00280010");
+      const cols = dataset.uint16("x00280011");
       const pixelSpacing = dataset.string("x00280030");
-      console.log(bitsAllocated, bitsStored, highBit, rows, cols, pixelSpacing);
+
+      // append to all results
       for (let i = 0; i < json.length; i++) {
         json[i]["00280100"] = { Value: [bitsAllocated], vr: "US" };
         json[i]["00280101"] = { Value: [bitsStored], vr: "US" };
@@ -150,7 +165,6 @@ app.get(
         json[i]["00280011"] = { Value: [cols], vr: "US" };
         json[i]["00280030"] = { Value: [pixelSpacing], vr: "DS" };
       }
-      console.log(json);
       res.json(json);
     });
   }

@@ -24,7 +24,7 @@ const logger = new winston.Logger({
   transports: [dailyRotateFile, consoleLogger],
 });
 
-const findDicomName = (name) => {
+const findDicomName = name => {
   for (const key of Object.keys(dict.standardDataElements)) {
     const value = dict.standardDataElements[key];
     if (value.name == name) {
@@ -39,7 +39,7 @@ const addMinutes = (date, minutes) => {
 };
 
 // request data from PACS via c-get or c-move
-const fetchData = async (studyUid, seriesUid) => {
+const fetchData = async (studyUid, seriesUid, waitForFirstImageOnly) => {
   // add query retrieve level and fetch whole study
   const j = {
     tags: [
@@ -67,11 +67,21 @@ const fetchData = async (studyUid, seriesUid) => {
 
   const prom = new Promise((resolve, reject) => {
     try {
-      scu(JSON.stringify(j), (result) => {
+      scu(JSON.stringify(j), result => {
         try {
           const json = JSON.parse(result);
-          if (json.code === 0 || json.code === 2) {
-            storage.getItem(studyUid).then((item) => {
+          if (
+            waitForFirstImageOnly &&
+            json.code === 1 &&
+            json.container.SOPInstanceUID
+          ) {
+            logger.info(
+              "stored",
+              path.join(j.storagePath, studyUid, json.container.SOPInstanceUID)
+            );
+            resolve(json);
+          } else if (json.code === 0 || json.code === 2) {
+            storage.getItem(studyUid).then(item => {
               if (!item) {
                 logger.info("stored", path.join(j.storagePath, studyUid));
                 const cacheTime = config.get("keepCacheInMinutes");
@@ -80,7 +90,7 @@ const fetchData = async (studyUid, seriesUid) => {
                 }
               }
             });
-            resolve(result);
+            resolve(json);
           } else {
             logger.info(JSON.parse(result));
           }
@@ -112,7 +122,7 @@ const utils = {
     j.source = config.get("source");
     j.storagePath = config.get("storagePath");
 
-    dimse.startScp(JSON.stringify(j), (result) => {
+    dimse.startScp(JSON.stringify(j), result => {
       try {
         logger.info(JSON.parse(result));
       } catch (error) {
@@ -127,7 +137,7 @@ const utils = {
     j.target = config.get("target");
 
     logger.info(`sending C-ECHO to target: ${j.target.aet}`);
-    dimse.echoScu(JSON.stringify(j), (result) => {
+    dimse.echoScu(JSON.stringify(j), result => {
       try {
         logger.info(JSON.parse(result));
       } catch (error) {
@@ -137,18 +147,18 @@ const utils = {
   },
 
   // fetch and wait
-  waitOrFetchData: (studyUid, seriesUid) => {
+  waitOrFetchData: (studyUid, seriesUid, waitForFirstImageOnly) => {
     // check if already locked and return promise
     if (lock.has(seriesUid)) {
       return lock.get(seriesUid);
     }
-    return fetchData(studyUid, seriesUid);
+    return fetchData(studyUid, seriesUid, waitForFirstImageOnly);
   },
 
   // remove cached data if outdated
   clearCache: async (storagePath, currentUid) => {
     const currentDate = new Date();
-    storage.forEach((item) => {
+    storage.forEach(item => {
       const dt = new Date(item.value);
       const directory = path.join(storagePath, item.key);
       if (dt.getTime() < currentDate.getTime() && item.key !== currentUid) {
@@ -157,7 +167,7 @@ const utils = {
           {
             recursive: true,
           },
-          (error) => {
+          error => {
             if (error) {
               logger.error(error);
             } else {
@@ -170,9 +180,9 @@ const utils = {
     });
   },
 
-  fileExists: (pathname) => {
+  fileExists: pathname => {
     return new Promise((resolve, reject) => {
-      fs.access(pathname, (err) => {
+      fs.access(pathname, err => {
         if (err) {
           reject(err);
         } else {
@@ -207,7 +217,7 @@ const utils = {
     tags.push(...defaults);
 
     // add parsed tags
-    tags.forEach((element) => {
+    tags.forEach(element => {
       const tagName = findDicomName(element) || element;
       j.tags.push({ key: tagName, value: "" });
     });
@@ -238,7 +248,7 @@ const utils = {
 
     // run find scu and return json response
     return new Promise((resolve, reject) => {
-      dimse.findScu(JSON.stringify(j), (result) => {
+      dimse.findScu(JSON.stringify(j), result => {
         try {
           const j = JSON.parse(result);
           if (j.code === 0) {
