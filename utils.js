@@ -25,12 +25,14 @@ const logger = new winston.Logger({
 });
 
 const findDicomName = name => {
+  // eslint-disable-next-line no-restricted-syntax
   for (const key of Object.keys(dict.standardDataElements)) {
     const value = dict.standardDataElements[key];
-    if (value.name == name) {
+    if (value.name === name) {
       return key;
     }
   }
+  return undefined;
 };
 
 // helper to add minutes to date object
@@ -68,9 +70,10 @@ const fetchData = async (studyUid, seriesUid, waitForFirstImageOnly) => {
   const prom = new Promise((resolve, reject) => {
     try {
       scu(JSON.stringify(j), result => {
-        try {
-          const json = JSON.parse(result);
-          if (
+        if (result && result.length > 0) {
+          try {
+            const json = JSON.parse(result);
+ if (
             waitForFirstImageOnly &&
             json.code === 1 &&
             json.container.SOPInstanceUID
@@ -80,24 +83,25 @@ const fetchData = async (studyUid, seriesUid, waitForFirstImageOnly) => {
               path.join(j.storagePath, studyUid, json.container.SOPInstanceUID)
             );
             resolve(json);
-          } else if (json.code === 0 || json.code === 2) {
-            storage.getItem(studyUid).then(item => {
-              if (!item) {
-                logger.info("stored", path.join(j.storagePath, studyUid));
-                const cacheTime = config.get("keepCacheInMinutes");
-                if (cacheTime >= 0) {
-                  storage.setItem(studyUid, addMinutes(new Date(), cacheTime));
+          } else             if (json.code === 0 || json.code === 2) {
+              storage.getItem(studyUid).then(item => {
+                if (!item) {
+                  logger.info("stored", path.join(j.storagePath, studyUid));
+                  const cacheTime = config.get("keepCacheInMinutes");
+                  if (cacheTime >= 0) {
+                    storage.setItem(studyUid, addMinutes(new Date(), cacheTime));
+                  }
                 }
-              }
-            });
-            resolve(json);
-          } else {
-            logger.info(JSON.parse(result));
+              });
+              resolve(result);
+            } else {
+              logger.info(JSON.parse(result));
+            }
+          } catch (error) {
+            reject(error, result);
           }
-        } catch (error) {
-          reject(error, result);
+          lock.delete(seriesUid);
         }
-        lock.delete(seriesUid);
       });
     } catch (error) {
       reject(error);
@@ -118,7 +122,7 @@ const utils = {
   },
 
   startScp: () => {
-    let j = {};
+    const j = {};
     j.source = config.get("source");
     j.storagePath = config.get("storagePath");
 
@@ -132,16 +136,18 @@ const utils = {
   },
 
   sendEcho: () => {
-    let j = {};
+    const j = {};
     j.source = config.get("source");
     j.target = config.get("target");
 
     logger.info(`sending C-ECHO to target: ${j.target.aet}`);
     dimse.echoScu(JSON.stringify(j), result => {
-      try {
-        logger.info(JSON.parse(result));
-      } catch (error) {
-        logger.error(result);
+      if (result && result.length > 0) {
+        try {
+          logger.info(JSON.parse(result));
+        } catch (error) {
+          logger.error(result);
+        }
       }
     });
   },
@@ -156,12 +162,12 @@ const utils = {
   },
 
   // remove cached data if outdated
-  clearCache: async (storagePath, currentUid) => {
+  clearCache: async (storagePath, currentUid, clearAll) => {
     const currentDate = new Date();
     storage.forEach(item => {
       const dt = new Date(item.value);
       const directory = path.join(storagePath, item.key);
-      if (dt.getTime() < currentDate.getTime() && item.key !== currentUid) {
+      if ((dt.getTime() < currentDate.getTime() && item.key !== currentUid) || clearAll) {
         fs.rmdir(
           directory,
           {
@@ -222,47 +228,52 @@ const utils = {
       j.tags.push({ key: tagName, value: "" });
     });
 
-    // add search params
-    for (const propName in query) {
-      if (query.hasOwnProperty(propName)) {
-        const tag = findDicomName(propName);
-        if (tag) {
-          let v = query[propName];
-          // patient name check
-          if (tag === "00100010") {
-            // min chars
-            if (config.get("qidoMinChars") > v.length) {
-              return [];
-            }
-            // auto append wildcard
-            if (config.get("qidoAppendWildcard")) {
-              v += "*";
-            }
+    // add search param
+    let isValidInput = false; 
+    Object.keys(query).forEach( propName => {
+      const tag = findDicomName(propName);
+      if (tag) {
+        let v = query[propName];
+        // patient name check
+        if (tag === "00100010") {
+          // check if minimum number of chars for patient name are given 
+          if (config.get("qidoMinChars") > v.length) {
+            isValidInput = true;
           }
-          j.tags.push({ key: tag, value: v });
+          // auto append wildcard
+          if (config.get("qidoAppendWildcard")) {
+            v += "*";
+          }
         }
+        j.tags.push({ key: tag, value: v });
       }
-    }
+  })
+  // return with empty results if invalid 
+  if (isValidInput) {
+    return [];
+  }
 
-    const offset = query.offset ? parseInt(query.offset) : 0;
+    const offset = query.offset ? parseInt(query.offset, 10) : 0;
 
     // run find scu and return json response
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       dimse.findScu(JSON.stringify(j), result => {
-        try {
-          const j = JSON.parse(result);
-          if (j.code === 0) {
-            const container = JSON.parse(j.container);
-            if (container) {
-              resolve(container.slice(offset));
-            } else {
-              resolve([]);
+        if (result && result.length > 0) {
+          try {
+            const json = JSON.parse(result);
+            if (json.code === 0) {
+              const container = JSON.parse(json.container);
+              if (container) {
+                resolve(container.slice(offset));
+              } else {
+                resolve([]);
+              }
             }
+          } catch (error) {
+            logger.error(error);
+            logger.error(result);
+            resolve([]);
           }
-        } catch (error) {
-          logger.error(error);
-          logger.error(result);
-          resolve([]);
         }
       });
     });

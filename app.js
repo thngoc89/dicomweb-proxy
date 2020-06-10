@@ -13,7 +13,7 @@ const app = express();
 const logger = utils.getLogger();
 
 // unprotected middleware passing
-let middle = (req, res, next) => {
+let middle = function middle(req, res, next) {
   next();
 };
 /*
@@ -22,13 +22,13 @@ if (config.get("useKeycloakAuth")) {
   const memoryStore = new session.MemoryStore();
   const keycloak = new Keycloak({ store: memoryStore });
 
-  //session
+  // session
   app.use(
     session({
       secret: uuidv4(),
       resave: false,
       saveUninitialized: true,
-      store: memoryStore
+      store: memoryStore,
     })
   );
 
@@ -46,8 +46,10 @@ app.use(express.static("public"));
 
 // prevents nodejs from exiting
 process.on("uncaughtException", err => {
-  logger.info("uncaught exception received");
+  logger.info("uncaught exception received:");
+  logger.info("------------------------------------------")
   logger.error(err.stack);
+  logger.info("------------------------------------------")
 });
 
 //------------------------------------------------------------------
@@ -97,8 +99,8 @@ app.get(
       "00201209",
     ];
 
-    let query = req.query;
-    query["StudyInstanceUID"] = req.params.studyInstanceUid;
+    const { query } = req;
+    query.StudyInstanceUID = req.params.studyInstanceUid;
 
     const json = await utils.doFind("SERIES", query, tags);
     res.json(json);
@@ -116,9 +118,9 @@ app.get(
     // fix for OHIF viewer assuming a lot of tags
     const tags = ["00080016", "00080018"];
 
-    let query = req.query;
-    query["StudyInstanceUID"] = studyInstanceUid;
-    query["SeriesInstanceUID"] = seriesInstanceUid;
+    const { query } = req;
+    query.StudyInstanceUID = req.params.studyInstanceUid;
+    query.SeriesInstanceUID = req.params.seriesInstanceUid;
 
     let json = await utils.doFind("IMAGE", query, tags);
     // fetch series but wait for first image only
@@ -177,27 +179,29 @@ app.get("/viewer/wadouri", middle, async (req, res) => {
   const seriesUid = req.query.seriesUID;
   const imageUid = req.query.objectUID;
   const storagePath = config.get("storagePath");
-  const pathname = path.join(storagePath, studyUid, imageUid) + ".dcm";
+  const pathname = `${path.join(storagePath, studyUid, imageUid)}.dcm`;
 
   try {
     await utils.fileExists(pathname);
   } catch (error) {
     await utils.waitOrFetchData(studyUid, seriesUid);
   }
+  // if the file is found, set Content-type and send data
+  res.setHeader("Content-type", "application/dicom");
 
   // read file from file system
   fs.readFile(pathname, (err, data) => {
     if (err) {
+      const msg = `Error getting the file: ${err}.`;
+      logger.error(msg);
       res.statusCode = 500;
-      return res.end(`Error getting the file: ${err}.`);
+      res.end(msg);
     }
-    // if the file is found, set Content-type and send data
-    res.setHeader("Content-type", "application/dicom");
     res.end(data);
   });
 
   // clear data
-  utils.clearCache(storagePath, studyUid);
+  utils.clearCache(storagePath, studyUid, false);
 });
 
 //------------------------------------------------------------------
@@ -205,7 +209,7 @@ app.get("/viewer/wadouri", middle, async (req, res) => {
 const port = config.get("webserverPort");
 app.listen(port, async () => {
   logger.info(`webserver running on port: ${port}`);
-  utils.init();
+  await utils.init();
 
   // if not using c-get, start our scp
   if (!config.get("useCget")) {
@@ -213,6 +217,12 @@ app.listen(port, async () => {
   }
 
   utils.sendEcho();
+
+  // clear data
+  if (config.get("clearCacheOnStartup")) {
+    const storagePath = config.get("storagePath");
+    utils.clearCache(storagePath, "", true);
+  }
 });
 
 //------------------------------------------------------------------
