@@ -7,6 +7,7 @@ const path = require("path");
 // const session = require("express-session");
 // const { v4: uuidv4 } = require("uuid");
 const dicomParser = require("dicom-parser");
+const crypto = require("crypto");
 const utils = require("./utils.js");
 
 const app = express();
@@ -54,7 +55,7 @@ process.on("uncaughtException", err => {
 
 //------------------------------------------------------------------
 
-app.get("/rs/studies", middle, async (req, res) => {
+app.get("/viewer/rs/studies", middle, async (req, res) => {
   // fix for OHIF viewer assuming a lot of tags
   const tags = [
     "00080005",
@@ -122,9 +123,9 @@ app.get(
     query.StudyInstanceUID = req.params.studyInstanceUid;
     query.SeriesInstanceUID = req.params.seriesInstanceUid;
 
-    let json = await utils.doFind("IMAGE", query, tags);
+    const json = await utils.doFind("IMAGE", query, tags);
     // fetch series but wait for first image only
-    let sopInstanceUid = await utils.waitOrFetchData(
+    const waitPromise = await utils.waitOrFetchData(
       studyInstanceUid,
       seriesInstanceUid,
       true
@@ -135,10 +136,10 @@ app.get(
       res.json(json);
       return;
     }
-    if (!sopInstanceUid) {
-      sopInstanceUid = json[0]["00080018"]["Value"][0];
-    }
+
+    const sopInstanceUid = json[0]["00080018"]["Value"][0];
     const storagePath = config.get("storagePath");
+    console.log(storagePath, studyInstanceUid, sopInstanceUid);
     const pathname =
       path.join(storagePath, studyInstanceUid, sopInstanceUid) + ".dcm";
 
@@ -157,6 +158,106 @@ app.get(
       const rows = dataset.uint16("x00280010");
       const cols = dataset.uint16("x00280011");
       const pixelSpacing = dataset.string("x00280030");
+      const modality = dataset.string("x00080060");
+
+      // all tags
+      /*
+      "0008193E" "LO"
+      "0020000D" "UI"
+      "0020000E" "UI"
+      
+      "00080005" "CS"
+      "00080008" "CS"
+      "00080016" "UI"
+      "00080018" "UI"
+      "00080020" "DA"
+      "00080021" "DA"
+      "00080022" "DA"
+      "00080023" "DA"
+      "00080030" "TM"
+      "00080031" "TM"
+      "00080032" "TM"
+      "00080033" "TM"
+      "00080050" "SH"
+      "00080060" "CS"
+      "00080070" "LO"
+      "00080080" "LO"
+      "00080090" "PN"
+      "00081010" "SH"
+      "00081030" "LO"
+      "00081032" "SQ"
+      "00081040" "LO"
+      "00081070" "PN"
+      "00081090" "LO"
+      "00081110" "SQ"
+      
+      "00100010" "PN"
+      "00100020" "LO"
+      "00100021" "LO"
+      "00100030" "DA"
+      "00100040" "CS"
+      "00101000" "LO"
+      "00101010" "AS"
+      "00101020" "DS"
+      "00101030" "DS"
+      "00104000" "LT"
+
+      "00180015" "CS"
+      "00180022" "CS"
+      "00180050" "DS"
+      "00180060" "DS"
+      "00180090" "DS"
+      "00181000" "LO"
+      "00181020" "LO"
+      "00181030" "LO"
+      "00181100" "DS"
+      "00181120" "DS"
+      "00181130" "DS"
+      "00181140" "CS"
+      "00181150" "IS"
+      "00181151" "IS"
+      "00181152" "IS"
+      "00181160" "SH"
+      "00181170" "IS"
+      "00181190" "DS"
+      "00181210" "SH"
+      "00185100" "CS"
+
+      "00200010" "SH"
+      "00200011" "IS"
+      "00200012" "IS"
+      "00200013" "IS"
+      "00200020" "CS"
+      "00200032" "DS"    
+      "00200037" "DS"
+      "00200052" "UI"
+      "00200040" "LO"
+      "00200041" "DS"
+
+      "00280002" "US"
+      "00280004" "CS"
+      "00280010" "US"
+      "00280011" "US"
+      "00280030" "DS"
+      "00280100" "US"
+      "00280101" "US"
+      "00280102" "US"
+      "00280103" "US"
+      "00281050" "DS"
+      "00281051" "DS"
+      "00281052" "DS"
+      "00281053" "DS"
+ 
+      "00321033" "LO"
+      "00400002" "DA"
+      "00400003" "TM"
+      "00400004" "DA"
+      "00400005" "TM"
+      "00400244" "DA"
+      "00400245" "TM"
+      "00400253" "SH"
+      "00400260" "SQ"
+*/
 
       // append to all results
       for (let i = 0; i < json.length; i++) {
@@ -166,8 +267,63 @@ app.get(
         json[i]["00280010"] = { Value: [rows], vr: "US" };
         json[i]["00280011"] = { Value: [cols], vr: "US" };
         json[i]["00280030"] = { Value: [pixelSpacing], vr: "DS" };
+        json[i]["00080060"] = { Value: [modality], vr: "CS" };
       }
       res.json(json);
+    });
+  }
+);
+
+//------------------------------------------------------------------
+
+app.get(
+  "/viewer/rs/studies/:studyInstanceUid/series/:seriesInstanceUid/instances/:sopInstanceUid/frames/:frame",
+  middle,
+  async (req, res) => {
+    const {
+      studyInstanceUid,
+      seriesInstanceUid,
+      sopInstanceUid,
+      frame,
+    } = req.params;
+    logger.info(studyInstanceUid, seriesInstanceUid, sopInstanceUid, frame);
+
+    const storagePath = config.get("storagePath");
+    const pathname = path.join(storagePath, studyInstanceUid, sopInstanceUid) + ".dcm";
+
+    fs.exists(pathname, function(exist) {
+      if (!exist) {
+        // if the file is not found, return 404
+        res.statusCode = 404;
+        res.end(`File ${pathname} not found!`);
+        return;
+      }
+
+      // read file from file system
+      fs.readFile(pathname, function(err, data) {
+        if (err) {
+          res.statusCode = 500;
+          res.end(`Error getting the file: ${err}.`);
+        } else {
+          const term = "\r\n";
+          const boundary = crypto.randomBytes(16).toString("hex");
+          const contentId = crypto.randomBytes(16).toString("hex");
+          const endline = `${term}--${boundary}--${term}`;
+
+          res.writeHead(200, {
+            "Content-Type": `multipart/related;start=${contentId};type="application/octed-stream";boundary="${boundary}"`,
+          });
+
+          res.write(`${term}--${boundary}${term}`);
+          res.write(`Content-Location:localhost${term}`);
+          res.write(`Content-ID:${contentId}${term}`);
+          res.write(`Content-Type:application/octet-stream${term}`);
+          res.write(term);
+          res.write(data);
+          res.write(endline);
+          res.end();
+        }
+      });
     });
   }
 );
