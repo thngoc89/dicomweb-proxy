@@ -7,6 +7,7 @@ const path = require("path");
 // const session = require("express-session");
 // const { v4: uuidv4 } = require("uuid");
 const dicomParser = require("dicom-parser");
+const crypto = require("crypto");
 const utils = require("./utils.js");
 
 const app = express();
@@ -45,14 +46,14 @@ shell.mkdir("-p", "./data");
 app.use(express.static("public"));
 
 // prevents nodejs from exiting
-process.on("uncaughtException", err => {
+process.on("uncaughtException", (err) => {
   logger.info("uncaught exception received");
   logger.error(err.stack);
 });
 
 //------------------------------------------------------------------
 
-app.get("/rs/studies", middle, async (req, res) => {
+app.get("/viewer/rs/studies", middle, async (req, res) => {
   // fix for OHIF viewer assuming a lot of tags
   const tags = [
     "00080005",
@@ -120,9 +121,9 @@ app.get(
     query["StudyInstanceUID"] = studyInstanceUid;
     query["SeriesInstanceUID"] = seriesInstanceUid;
 
-    let json = await utils.doFind("IMAGE", query, tags);
+    const json = await utils.doFind("IMAGE", query, tags);
     // fetch series but wait for first image only
-    let sopInstanceUid = await utils.waitOrFetchData(
+    const waitPromise = await utils.waitOrFetchData(
       studyInstanceUid,
       seriesInstanceUid,
       true
@@ -133,10 +134,10 @@ app.get(
       res.json(json);
       return;
     }
-    if (!sopInstanceUid) {
-      sopInstanceUid = json[0]["00080018"]["Value"][0];
-    }
+
+    const sopInstanceUid = json[0]["00080018"]["Value"][0];
     const storagePath = config.get("storagePath");
+    console.log(storagePath, studyInstanceUid, sopInstanceUid);
     const pathname =
       path.join(storagePath, studyInstanceUid, sopInstanceUid) + ".dcm";
 
@@ -155,6 +156,7 @@ app.get(
       const rows = dataset.uint16("x00280010");
       const cols = dataset.uint16("x00280011");
       const pixelSpacing = dataset.string("x00280030");
+      const modality = dataset.string("x00080060");
 
       // append to all results
       for (let i = 0; i < json.length; i++) {
@@ -164,8 +166,63 @@ app.get(
         json[i]["00280010"] = { Value: [rows], vr: "US" };
         json[i]["00280011"] = { Value: [cols], vr: "US" };
         json[i]["00280030"] = { Value: [pixelSpacing], vr: "DS" };
+        json[i]["00080060"] = { Value: [modality], vr: "CS" };
       }
       res.json(json);
+    });
+  }
+);
+
+//------------------------------------------------------------------
+
+app.get(
+  "/viewer/rs/studies/:studyInstanceUid/series/:seriesInstanceUid/instances/:sopInstanceUid/frames/:frame",
+  middle,
+  async (req, res) => {
+    const {
+      studyInstanceUid,
+      seriesInstanceUid,
+      sopInstanceUid,
+      frame,
+    } = req.params;
+    logger.info(studyInstanceUid, seriesInstanceUid, sopInstanceUid, frame);
+
+    const storagePath = config.get("storagePath");
+    const pathname = path.join(storagePath, studyInstanceUid, sopInstanceUid) + ".dcm";
+
+    fs.exists(pathname, function(exist) {
+      if (!exist) {
+        // if the file is not found, return 404
+        res.statusCode = 404;
+        res.end(`File ${pathname} not found!`);
+        return;
+      }
+
+      // read file from file system
+      fs.readFile(pathname, function(err, data) {
+        if (err) {
+          res.statusCode = 500;
+          res.end(`Error getting the file: ${err}.`);
+        } else {
+          const term = "\r\n";
+          const boundary = crypto.randomBytes(16).toString("hex");
+          const contentId = crypto.randomBytes(16).toString("hex");
+          const endline = `${term}--${boundary}--${term}`;
+
+          res.writeHead(200, {
+            "Content-Type": `multipart/related;start=${contentId};type="application/octed-stream";boundary="${boundary}"`,
+          });
+
+          res.write(`${term}--${boundary}${term}`);
+          res.write(`Content-Location:localhost${term}`);
+          res.write(`Content-ID:${contentId}${term}`);
+          res.write(`Content-Type:application/octet-stream${term}`);
+          res.write(term);
+          res.write(data);
+          res.write(endline);
+          res.end();
+        }
+      });
     });
   }
 );
