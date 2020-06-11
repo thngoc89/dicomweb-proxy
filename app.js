@@ -3,9 +3,6 @@ const config = require("config");
 const shell = require("shelljs");
 const fs = require("fs");
 const path = require("path");
-// const Keycloak = require("keycloak-connect");
-// const session = require("express-session");
-// const { v4: uuidv4 } = require("uuid");
 const dicomParser = require("dicom-parser");
 const crypto = require("crypto");
 const utils = require("./utils.js");
@@ -17,28 +14,7 @@ const logger = utils.getLogger();
 const middle = function middle(req, res, next) {
   next();
 };
-/*
-// init auth if enabled
-if (config.get("useKeycloakAuth")) {
-  const memoryStore = new session.MemoryStore();
-  const keycloak = new Keycloak({ store: memoryStore });
 
-  // session
-  app.use(
-    session({
-      secret: uuidv4(),
-      resave: false,
-      saveUninitialized: true,
-      store: memoryStore,
-    })
-  );
-
-  app.use(keycloak.middleware({}));
-
-  // use keycloak as middleware
-  middle = keycloak.protect();
-}
-*/
 
 shell.mkdir("-p", config.get("logDir"));
 shell.mkdir("-p", "./data");
@@ -55,27 +31,18 @@ process.on("uncaughtException", (err) => {
 
 //------------------------------------------------------------------
 
+app.get("/rs/studies", middle, async (req, res) => {
+
+  const tags = utils.studyLevelTags();
+
+  const json = await utils.doFind("STUDY", req.query, tags);
+  res.json(json);
+});
+
+//------------------------------------------------------------------
 app.get("/viewer/rs/studies", middle, async (req, res) => {
-  // fix for OHIF viewer assuming a lot of tags
-  const tags = [
-    "00080005",
-    "00080020",
-    "00080030",
-    "00080050",
-    "00080054",
-    "00080056",
-    "00080061",
-    "00080090",
-    "00081190",
-    "00100010",
-    "00100020",
-    "00100030",
-    "00100040",
-    "0020000D",
-    "00200010",
-    "00201206",
-    "00201208",
-  ];
+
+  const tags = utils.studyLevelTags();
 
   const json = await utils.doFind("STUDY", req.query, tags);
   res.json(json);
@@ -87,21 +54,11 @@ app.get(
   "/viewer/rs/studies/:studyInstanceUid/series",
   middle,
   async (req, res) => {
-    // fix for OHIF viewer assuming a lot of tags
-    const tags = [
-      "00080005",
-      "00080054",
-      "00080056",
-      "00080060",
-      "0008103E",
-      "00081190",
-      "0020000E",
-      "00200011",
-      "00201209",
-    ];
-
+    
     const { query } = req;
     query.StudyInstanceUID = req.params.studyInstanceUid;
+
+    const tags = utils.seriesLevelTags();
 
     const json = await utils.doFind("SERIES", query, tags);
     res.json(json);
@@ -148,106 +105,6 @@ app.get(
         return;
       }
       const dataset = dicomParser.parseDicom(data);
-
-      // all tags
-      /*
-      "0008193E" "LO"
-      "0020000D" "UI"
-      "0020000E" "UI"
-      
-      "00080005" "CS" "Specific Character Set"
-      "00080008" "CS" "Image Type"
-      "00080016" "UI" "SOP Class UID"
-      "00080018" "UI" "SOP Instance UID"
-      "00080020" "DA" "Study Date"
-      "00080021" "DA" "Series Date"
-      "00080022" "DA" "Acquisition Date"
-      "00080023" "DA" "Content Date"
-      "00080030" "TM" "Study Time"
-      "00080031" "TM" "Series Time"
-      "00080032" "TM" "Acq. Time"
-      "00080033" "TM" "Content Time"
-      "00080050" "SH" "Accession Number"
-      "00080060" "CS" "Modality"
-      "00080070" "LO" "Manufacturer"
-      "00080080" "LO" "Institution Name"
-      "00080090" "PN" "Referring Physician's Name"
-      "00081010" "SH" "Station Name"
-      "00081030" "LO" "Study Description"
-      "00081032" "SQ" "Procedure Code Sequence"
-      "00081040" "LO" "Institutional Department Name"
-      "00081070" "PN" "Operators Name"
-      "00081090" "LO" "Manufacturer's Model Name"
-      "00081110" "SQ" "Referenced Study Sequence"
-      
-      "00100010" "PN" "Patient's Name"
-      "00100020" "LO" "Patient ID"
-      "00100021" "LO" "Issuer of Patient ID"
-      "00100030" "DA" "Patient's Birth Date"
-      "00100040" "CS" "Patient Sex"
-      "00101000" "LO" "?"
-      "00101010" "AS" "Patient's Age"
-      "00101020" "DS" "Patient's Size"
-      "00101030" "DS" "Patient's Weight"
-      "00104000" "LT" "Patient Comments"
-
-      "00180015" "CS" "Body Part Examined"
-      "00180022" "CS" "Scan Options"
-      "00180050" "DS" "Slice Thickness"
-      "00180060" "DS" "KVP"
-      "00180090" "DS" "Data Collection Diameter"
-      "00181000" "LO" "Device Serial Number"
-      "00181020" "LO" "Software Version"
-      "00181030" "LO" "Protocol Name"
-      "00181100" "DS" "Reconstruction Diameter"
-      "00181120" "DS" "Gantry/Detector Tilt"
-      "00181130" "DS" "Table Height"
-      "00181140" "CS" "Rotation Direction"
-      "00181150" "IS" "Exposure Time"
-      "00181151" "IS" "X-Ray Tube"
-      "00181152" "IS" "Exposure Attribute"
-      "00181160" "SH" "Filter Type"
-      "00181170" "IS" "Generator Power"
-      "00181190" "DS" "Focal Spots"
-      "00181210" "SH" "Convolution Kernel"
-      "00185100" "CS" "Patient Position"
-
-      "00200010" "SH" "Study ID"
-      "00200011" "IS" "Series Number"
-      "00200012" "IS" "Acquisition Number"
-      "00200013" "IS" "Instance Number"
-      "00200020" "CS" "Patient Orientation"
-      "00200032" "DS" "Image Postion"
-      "00200037" "DS" "Image Orientation"
-      "00200052" "UI" "Frame of Reference UID"
-      "00201040" "LO" "Position Reference Indicator"
-      "00201041" "DS" "Slice Location"
-
-      "00280002" "US" "Samples per Pixel"
-      "00280004" "CS" "Photometric Interpretation"
-      "00280010" "US" "Rows"
-      "00280011" "US" "Columns"
-      "00280030" "DS" "Pixel Spacing"
-      "00280100" "US" "Bits Allocated"
-      "00280101" "US" "Bits Stored"
-      "00280102" "US" "High Bit"
-      "00280103" "US" "Pixel Representation"
-      "00281050" "DS" "Window Center"
-      "00281051" "DS" "Window Width"
-      "00281052" "DS" "Rescale Intercept"
-      "00281053" "DS" "Rescale Slope"
- 
-      // modality 
-      "00321033" "LO" "Requesting Service"
-      "00400002" "DA" ""
-      "00400003" "TM"
-      "00400004" "DA"
-      "00400005" "TM"
-      "00400244" "DA"
-      "00400245" "TM"
-      "00400253" "SH"
-      "00400260" "SQ"
-     */
 
       // parse additional needed attributes
       const bitsAllocated = dataset.uint16("x00280100");
