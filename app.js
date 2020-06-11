@@ -5,16 +5,13 @@ const fs = require("fs");
 const path = require("path");
 const dicomParser = require("dicom-parser");
 const crypto = require("crypto");
+const cors = require("cors");
 const utils = require("./utils.js");
 
 const app = express();
+app.use(cors());
+
 const logger = utils.getLogger();
-
-// unprotected middleware passing
-const middle = function middle(req, res, next) {
-  next();
-};
-
 
 shell.mkdir("-p", config.get("logDir"));
 shell.mkdir("-p", "./data");
@@ -31,7 +28,7 @@ process.on("uncaughtException", (err) => {
 
 //------------------------------------------------------------------
 
-app.get("/rs/studies", middle, async (req, res) => {
+app.get("/rs/studies", async (req, res) => {
 
   const tags = utils.studyLevelTags();
 
@@ -40,7 +37,7 @@ app.get("/rs/studies", middle, async (req, res) => {
 });
 
 //------------------------------------------------------------------
-app.get("/viewer/rs/studies", middle, async (req, res) => {
+app.get("/viewer/rs/studies", async (req, res) => {
 
   const tags = utils.studyLevelTags();
 
@@ -52,7 +49,6 @@ app.get("/viewer/rs/studies", middle, async (req, res) => {
 
 app.get(
   "/viewer/rs/studies/:studyInstanceUid/series",
-  middle,
   async (req, res) => {
     
     const { query } = req;
@@ -69,7 +65,6 @@ app.get(
 
 app.get(
   "/viewer/rs/studies/:studyInstanceUid/series/:seriesInstanceUid/metadata",
-  middle,
   async (req, res) => {
     const { studyInstanceUid, seriesInstanceUid } = req.params;
 
@@ -154,7 +149,6 @@ app.get(
 
 app.get(
   "/viewer/rs/studies/:studyInstanceUid/series/:seriesInstanceUid/instances/:sopInstanceUid/frames/:frame",
-  middle,
   async (req, res) => {
     const {
       studyInstanceUid,
@@ -211,7 +205,7 @@ app.get(
 
 //------------------------------------------------------------------
 
-app.get("/viewer/wadouri", middle, async (req, res) => {
+app.get("/viewer/wadouri", async (req, res) => {
   const studyUid = req.query.studyUID;
   const seriesUid = req.query.seriesUID;
   const imageUid = req.query.objectUID;
